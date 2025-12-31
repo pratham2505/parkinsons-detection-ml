@@ -5,10 +5,13 @@ from sklearn.model_selection import train_test_split # splits datasets into trai
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix # different ways to measure how good my model is
 from sklearn.ensemble import RandomForestClassifier # the model that we are training
 from sklearn.metrics import roc_auc_score
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
+    models_dir = ROOT / "models"
+    models_dir.mkdir(exist_ok=True)
     df = pd.read_csv(ROOT / "data" / "parkinsons.data") # first we read datafile into a pandas dataframe
 
     y = df["status"] # y is the answer which we want the model to predict (0 = no parkinsons, 1 = parkinsons)
@@ -16,6 +19,10 @@ def main():
 
     # drop any non-numeric columns (like the 'name' ID)
     X = X.select_dtypes(exclude=["object"])
+
+    with open(models_dir / "feature_columns.json", "w") as f:
+        json.dump(list(X.columns), f)
+
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y # 0.2 is 20% test 80% train, same split every time so the results are repeatable
