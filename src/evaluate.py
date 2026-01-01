@@ -45,7 +45,7 @@ def main():
     plt.plot([0, 1], [0, 1], linestyle="--", label="Random guess")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve – Parkinson's Detection")
+    plt.title("ROC Curve - Parkinson's Detection")
     plt.legend(loc="lower right")
 
     # 8) Save figure

@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--row", type=int, default=0, help="Row index to predict from dataset") # add argument for row index because we want to specify which row to predict
     args = parser.parse_args() # parse the command line arguments
 
-    model_path = ROOT / "models" / "random_forest_smote.pkl"
+    model_path = ROOT / "models" / "random_forest.pkl"
     if not model_path.exists():
         raise FileNotFoundError(f"Trained model not found at {model_path}. Please train the model first.")  
     
@@ -34,6 +34,7 @@ def main():
         raise ValueError(f"Dataset is missing required feature columns: {missing}")
 
     X = df[feature_cols]
+    y = df["status"] if "status" in df.columns else None
 
     if args.row < 0 or args.row >= len(X):
         raise ValueError(f"--row must be between 0 and {len(X)-1}")
@@ -41,12 +42,13 @@ def main():
     x_one = X.iloc[[args.row]] # get the specified row as a dataframe
     prob = model.predict_proba(x_one)[0,1] # get probability of having parkinsons
     pred = int(model.predict(x_one)[0]) # get the predicted class (0 or 1)
-    true_label = int(df.loc[args.row, "status"]) # get the true label for comparison
 
     print(f"Row {args.row}")
     print(f"Predicted: {pred} (0=Healthy, 1=Parkinson's)")
     print(f"Prob of Parkinson's: {prob:.4f}")
-    print(f"True Label: {true_label}")
+    if y is not None:
+        true_label = int(y.iloc[args.row])
+        print(f"True Label: {true_label}")
 
 if __name__ == "__main__":
     main()
