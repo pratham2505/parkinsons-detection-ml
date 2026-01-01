@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--row", type=int, default=0, help="Row index to predict from dataset") # add argument for row index because we want to specify which row to predict
     args = parser.parse_args() # parse the command line arguments
 
-    model_path = ROOT / "models" / "random_forest.pkl"
+    model_path = ROOT / "models" / "random_forest_smote.pkl"
     if not model_path.exists():
         raise FileNotFoundError(f"Trained model not found at {model_path}. Please train the model first.")  
     

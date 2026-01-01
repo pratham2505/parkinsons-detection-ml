@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split # splits datasets into trai
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix # different ways to measure how good my model is
 from sklearn.ensemble import RandomForestClassifier # the model that we are training
 from sklearn.metrics import roc_auc_score
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 import json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,22 +30,46 @@ def main():
         X, y, test_size=0.2, random_state=42, stratify=y # 0.2 is 20% test 80% train, same split every time so the results are repeatable
     ) # stratify=y keeps the same % of healthy/parkinson in both sets (important for fairness)
 
-    model = RandomForestClassifier(random_state=42) # create the model by building many decision trees and averaging their results
-    model.fit(X_train, y_train) # now we train the model on the training data
+    # -------------------------
+    # 1) Baseline model (no SMOTE)
+    # -------------------------
+    baseline = RandomForestClassifier(random_state=42)
+    baseline.fit(X_train, y_train)
 
-    model_path = ROOT / "models" / "random_forest.pkl"
-    joblib.dump(model, model_path) # save the trained model to a file so we
-    print(f"Model saved to {model_path}")
+    baseline_preds = baseline.predict(X_test)
+    baseline_probs = baseline.predict_proba(X_test)[:, 1]
+    baseline_auc = roc_auc_score(y_test, baseline_probs)
 
-    preds = model.predict(X_test) # use the trained model to make predictions on the test data
+    print("\n=== BASELINE (no SMOTE) ===")
+    print("Accuracy:", accuracy_score(y_test, baseline_preds))
+    print("Confusion Matrix:\n", confusion_matrix(y_test, baseline_preds))
+    print("Classification Report:\n", classification_report(y_test, baseline_preds))
+    print("ROC-AUC:", baseline_auc)
 
-    print("Accuracy:", accuracy_score(y_test, preds))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, preds))
-    print("\nClassification Report:\n", classification_report(y_test, preds))
+    # -------------------------
+    # 2) SMOTE + Model (ONLY on training data)
+    # -------------------------
+    smote_model = ImbPipeline(steps=[
+        ("smote", SMOTE(random_state=42)),
+        ("rf", RandomForestClassifier(random_state=42))
+    ])
 
-    probs = model.predict_proba(X_test)[:, 1]
-    auc = roc_auc_score(y_test, probs)
-    print("ROC-AUC Score:", auc)
+    smote_model.fit(X_train, y_train)
+
+    smote_preds = smote_model.predict(X_test)
+    smote_probs = smote_model.predict_proba(X_test)[:, 1]
+    smote_auc = roc_auc_score(y_test, smote_probs)
+
+    print("\n=== SMOTE + RandomForest ===")
+    print("Accuracy:", accuracy_score(y_test, smote_preds))
+    print("Confusion Matrix:\n", confusion_matrix(y_test, smote_preds))
+    print("Classification Report:\n", classification_report(y_test, smote_preds))
+    print("ROC-AUC:", smote_auc)
+
+    # Save the SMOTE pipeline as your main production model (recommended)
+    model_path = ROOT / "models" / "random_forest_smote.pkl"
+    joblib.dump(smote_model, model_path)
+    print(f"\nSMOTE model saved to {model_path}")
     
 if __name__ == "__main__":
     main()
