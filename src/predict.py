@@ -40,12 +40,18 @@ def main():
         raise ValueError(f"--row must be between 0 and {len(X)-1}")
     
     x_one = X.iloc[[args.row]] # get the specified row as a dataframe
-    prob = model.predict_proba(x_one)[0,1] # get probability of having parkinsons
-    pred = int(model.predict(x_one)[0]) # get the predicted class (0 or 1)
+    THRESHOLD = 0.3
+
+    prob = model.predict_proba(x_one)[0, 1]
+    pred = int(prob >= THRESHOLD)
+    
+    # prob = model.predict_proba(x_one)[0,1] # get probability of having parkinsons
+    # pred = int(model.predict(x_one)[0]) # get the predicted class (0 or 1)
 
     print(f"Row {args.row}")
     print(f"Predicted: {pred} (0=Healthy, 1=Parkinson's)")
     print(f"Prob of Parkinson's: {prob:.4f}")
+    print(f"Decision threshold: {THRESHOLD}")
     if y is not None:
         true_label = int(y.iloc[args.row])
         print(f"True Label: {true_label}")

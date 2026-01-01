@@ -35,9 +35,7 @@ def main():
         X, y, test_size=0.2, random_state=42, stratify=y # 0.2 is 20% test 80% train, same split every time so the results are repeatable
     ) # stratify=y keeps the same % of healthy/parkinson in both sets (important for fairness)
 
-    # -------------------------
     # 1) Baseline model (no SMOTE)
-    # -------------------------
     baseline = RandomForestClassifier(random_state=42)
     baseline.fit(X_train, y_train)
 
@@ -55,9 +53,7 @@ def main():
     joblib.dump(baseline, baseline_path)
     print(f"\nBaseline model saved to {baseline_path}")
 
-    # -------------------------
     # 2) SMOTE + Model (ONLY on training data)
-    # -------------------------
     if args.use_smote:
         smote_model = ImbPipeline(steps=[
             ("smote", SMOTE(random_state=42)),
@@ -76,7 +72,7 @@ def main():
         print("Classification Report:\n", classification_report(y_test, smote_preds))
         print("ROC-AUC:", smote_auc)
 
-        # Save the SMOTE pipeline as your main production model (recommended)
+        # Save the SMOTE pipeline as your main production model 
         model_path = ROOT / "models" / "random_forest_smote.pkl"
         joblib.dump(smote_model, model_path)
         print(f"\nSMOTE model saved to {model_path}")
